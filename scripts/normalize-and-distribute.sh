@@ -136,8 +136,8 @@ assign_files_to_event() {
 
 # Distribution: percentage ranges of the sorted file list
 # Overlapping ranges give some files to multiple events for variety
-assign_files_to_event "preToolUse"          0  30   # shortest ~30%
-assign_files_to_event "postToolUse"         0  30   # shortest ~30% (same as preToolUse)
+assign_files_to_event "preToolUse"          0  100  # all files (variety of lengths)
+assign_files_to_event "postToolUse"         0  100  # all files (variety of lengths)
 assign_files_to_event "userPromptSubmitted" 15 50   # short-to-medium
 assign_files_to_event "subagentStop"        25 60   # short-medium
 assign_files_to_event "agentStop"           35 70   # medium

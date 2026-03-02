@@ -8,8 +8,8 @@ The plugin ships with pre-loaded jungle-themed MP3s distributed across event dir
 
 | Event                 | Sounds | Description               |
 | --------------------- | ------ | ------------------------- |
-| `preToolUse`          | 6      | A tool is about to run    |
-| `postToolUse`         | 6      | A tool just completed     |
+| `preToolUse`          | 23     | A tool is about to run    |
+| `postToolUse`         | 23     | A tool just completed     |
 | `sessionStart`        | 11     | A session started         |
 | `sessionEnd`          | 11     | A session ended           |
 | `userPromptSubmitted` | 8      | User submitted a prompt   |
@@ -17,7 +17,7 @@ The plugin ships with pre-loaded jungle-themed MP3s distributed across event dir
 | `subagentStop`        | 8      | A subagent completed      |
 | `errorOccurred`       | 8      | An error occurred         |
 
-Shorter sounds (bird calls, leaf rustles) are assigned to frequent events like `preToolUse`, while longer atmospheric sounds go to rarer events like `sessionStart`. If a `sounds/<event>/` directory is empty, a macOS system sound is used as a fallback.
+Tool-use events (`preToolUse`, `postToolUse`) include all sounds for maximum variety, while other events use duration-based subsets — shorter sounds for frequent events, longer atmospheric sounds for rarer ones like `sessionStart`. If a `sounds/<event>/` directory is empty, a macOS system sound is used as a fallback.
 
 ## Requirements
 
@@ -73,8 +73,8 @@ Drop audio files into the `sounds/<event>/` directory for any hook event. The pl
 
 ```
 sounds/
-├── preToolUse/          # 6 short jungle sounds
-├── postToolUse/         # 6 short jungle sounds
+├── preToolUse/          # 23 jungle sounds (all files)
+├── postToolUse/         # 23 jungle sounds (all files)
 ├── sessionStart/        # 11 longer atmospheric sounds
 ├── sessionEnd/          # 11 longer atmospheric sounds
 ├── userPromptSubmitted/ # 8 short-to-medium sounds
@@ -99,7 +99,7 @@ Change the `VOLUME` variable at the top of `scripts/play-sound.sh` (0.0 = silent
 
 ### Adjusting max duration
 
-Sounds are capped at **30 seconds** of playback. Change the `MAX_DURATION` variable at the top of `scripts/play-sound.sh` to adjust (value is in seconds).
+Sounds are capped at **60 seconds** of playback. Change the `MAX_DURATION` variable at the top of `scripts/play-sound.sh` to adjust (value is in seconds).
 
 ### After making changes
 

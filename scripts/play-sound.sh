@@ -6,8 +6,8 @@
 set -euo pipefail
 
 SOUNDS_DIR="/System/Library/Sounds"
-VOLUME="0.3"
-MAX_DURATION="30"
+VOLUME="0.15"
+MAX_DURATION="60"
 LOG_FILE="/tmp/copilot-jungle-sounds.log"
 
 EVENT="${1:-}"
