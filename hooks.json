@@ -1,75 +1,39 @@
 {
-  "description": "Plays macOS system sounds during agent lifecycle events",
+  "version": 1,
   "hooks": {
-    "PreToolUse": [
+    "preToolUse": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/play-sound.sh",
-            "async": true,
-            "timeout": 10
-          }
-        ]
+        "type": "command",
+        "bash": "./scripts/play-sound.sh preToolUse",
+        "timeoutSec": 10
       }
     ],
-    "PostToolUse": [
+    "postToolUse": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/play-sound.sh",
-            "async": true,
-            "timeout": 10
-          }
-        ]
+        "type": "command",
+        "bash": "./scripts/play-sound.sh postToolUse",
+        "timeoutSec": 10
       }
     ],
-    "Stop": [
+    "sessionStart": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/play-sound.sh",
-            "async": true,
-            "timeout": 10
-          }
-        ]
+        "type": "command",
+        "bash": "./scripts/play-sound.sh sessionStart",
+        "timeoutSec": 10
       }
     ],
-    "SubagentStart": [
+    "sessionEnd": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/play-sound.sh",
-            "async": true,
-            "timeout": 10
-          }
-        ]
+        "type": "command",
+        "bash": "./scripts/play-sound.sh sessionEnd",
+        "timeoutSec": 10
       }
     ],
-    "SubagentStop": [
+    "errorOccurred": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/play-sound.sh",
-            "async": true,
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/play-sound.sh",
-            "timeout": 10
-          }
-        ]
+        "type": "command",
+        "bash": "./scripts/play-sound.sh errorOccurred",
+        "timeoutSec": 10
       }
     ]
   }

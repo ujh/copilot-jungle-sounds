@@ -1,29 +1,41 @@
 #!/bin/bash
-# play-sound.sh — Plays macOS system sounds based on Copilot CLI / Claude Code hook events.
-# Reads hook event JSON from stdin and maps hook_event_name to a sound file.
+# play-sound.sh — Plays macOS system sounds based on Copilot CLI hook events.
+# Usage: play-sound.sh <event_name>
+# Event name is passed as a CLI argument from hooks.json.
 
 set -euo pipefail
 
 SOUNDS_DIR="/System/Library/Sounds"
 VOLUME="0.3"
+LOG_FILE="/tmp/copilot-jungle-sounds.log"
 
-# Read the hook event name from stdin JSON
-EVENT=$(jq -r '.hook_event_name // empty' 2>/dev/null)
+EVENT="${1:-}"
+
+# Log invocation
+echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Hook invoked: event='$EVENT'" >> "$LOG_FILE"
+
+# Drain stdin (Copilot CLI sends JSON on stdin; we don't need it but must consume it)
+cat > /dev/null 2>/dev/null || true
 
 case "$EVENT" in
-  PreToolUse)      SOUND="Tink.aiff" ;;
-  PostToolUse)     SOUND="Pop.aiff" ;;
-  Stop)            SOUND="Glass.aiff" ;;
-  SubagentStart)   SOUND="Morse.aiff" ;;
-  SubagentStop)    SOUND="Purr.aiff" ;;
-  Notification)    SOUND="Hero.aiff" ;;
-  *)               exit 0 ;;
+  preToolUse)      SOUND="Tink.aiff" ;;
+  postToolUse)     SOUND="Pop.aiff" ;;
+  sessionStart)    SOUND="Morse.aiff" ;;
+  sessionEnd)      SOUND="Glass.aiff" ;;
+  errorOccurred)   SOUND="Hero.aiff" ;;
+  *)
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Unknown event: '$EVENT'" >> "$LOG_FILE"
+    exit 0
+    ;;
 esac
 
 SOUND_FILE="$SOUNDS_DIR/$SOUND"
 
 if [[ -f "$SOUND_FILE" ]] && command -v afplay &>/dev/null; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
   afplay -v "$VOLUME" "$SOUND_FILE" &
+else
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot play: file=$SOUND_FILE afplay=$(command -v afplay 2>/dev/null || echo 'not found')" >> "$LOG_FILE"
 fi
 
 exit 0
