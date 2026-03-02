@@ -30,9 +30,9 @@ Tool-use events (`preToolUse`, `postToolUse`) include all sounds for maximum var
 # Install from the GitHub repository
 copilot plugin install ujh/copilot-jungle-sounds
 
-# Or install from a local clone
+# Or install from a local clone (use the full path to the directory)
 git clone https://github.com/ujh/copilot-jungle-sounds.git
-copilot plugin install ./copilot-jungle-sounds
+copilot plugin install /full/path/to/copilot-jungle-sounds
 ```
 
 ### Verify installation
@@ -107,7 +107,7 @@ Sounds are capped at **60 seconds** of playback. Change the `MAX_DURATION` varia
 Re-install the plugin to pick up your edits:
 
 ```bash
-copilot plugin install ./copilot-jungle-sounds
+copilot plugin install /full/path/to/copilot-jungle-sounds
 ```
 
 ### Adding new sound files
