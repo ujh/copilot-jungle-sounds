@@ -13,7 +13,7 @@ The plugin ships with pre-loaded jungle-themed audio files (MP3 and WAV) in a ce
 | `sessionStart`        | Longer-duration subset   | A session started         |
 | `sessionEnd`          | Longer-duration subset   | A session ended           |
 | `userPromptSubmitted` | Short-to-medium subset   | User submitted a prompt   |
-| `agentStop`           | Medium subset            | Agent finished responding |
+| `agentStop`           | Medium subset            | Agent finished responding (includes ask-for-input moments) |
 | `subagentStop`        | Short-medium subset      | A subagent completed      |
 | `errorOccurred`       | Medium/distinctive subset | An error occurred         |
 
@@ -61,7 +61,7 @@ Alternatively, you can disable **all hooks** (from all sources) by adding `"disa
 
 ## Debugging
 
-Hook invocations are logged to `/tmp/copilot-jungle-sounds-YYYY-MM-DD.log` (daily file). Check today's file to verify hooks are firing:
+Hook invocations and the received hook payload input are logged to `/tmp/copilot-jungle-sounds-YYYY-MM-DD.log` (daily file). Check today's file to verify hooks are firing and inspect payload shape:
 
 ```bash
 tail -f "/tmp/copilot-jungle-sounds-$(date +%Y-%m-%d).log"
@@ -121,7 +121,7 @@ All located at `/System/Library/Sounds/*.aiff`.
 
 ### Adjusting volume
 
-Change the `VOLUME` variable at the top of `scripts/play-sound.sh` (0.0 = silent, 1.0 = full volume, default is `0.10`).
+Change the `VOLUME` variable at the top of `scripts/play-sound.sh` (0.0 = silent, 1.0 = full volume, default is `0.10`). The `agentStop` event is played at 2x this base value (capped at `1.0`) to create a stronger attention cue.
 
 ### Adjusting max duration
 

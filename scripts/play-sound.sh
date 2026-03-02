@@ -20,6 +20,11 @@ HOOK_PAYLOAD="$(cat 2>/dev/null || true)"
 
 # Log invocation
 echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Hook invoked: event='$EVENT'" >> "$LOG_FILE"
+if [[ -n "${HOOK_PAYLOAD//[[:space:]]/}" ]]; then
+  printf "%s [INFO] Hook payload: %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$HOOK_PAYLOAD" >> "$LOG_FILE"
+else
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Hook payload: <empty>" >> "$LOG_FILE"
+fi
 
 record_tool_usage() {
   local event="$1"
@@ -67,6 +72,13 @@ case "$EVENT" in
   *)                      MAX_DURATION="120" ;;
 esac
 
+EFFECTIVE_VOLUME="$VOLUME"
+case "$EVENT" in
+  agentStop)
+    EFFECTIVE_VOLUME=$(awk "BEGIN {v = $VOLUME * 2; if (v > 1) v = 1; printf \"%.2f\", v}")
+    ;;
+esac
+
 SOUND_FILE="$SOUNDS_DIR/$SOUND"
 
 # Check for custom sounds in sounds/<event>/ directory
@@ -97,13 +109,13 @@ elif command -v afplay &>/dev/null; then
   fi
 
   if [[ "$NEEDS_LOOP" == true ]] && command -v ffplay &>/dev/null; then
-    FFPLAY_VOLUME=$(awk "BEGIN {printf \"%d\", $VOLUME * 100}")
+    FFPLAY_VOLUME=$(awk "BEGIN {printf \"%d\", $EFFECTIVE_VOLUME * 100}")
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Looping short file (${FILE_DURATION_INT}s < ${MIN_DURATION}s): $SOUND_FILE" >> "$LOG_FILE"
     ffplay -nodisp -autoexit -loglevel quiet -volume "$FFPLAY_VOLUME" -stream_loop -1 -t "$MAX_DURATION" "$SOUND_FILE" </dev/null >/dev/null 2>&1 &
     disown
   else
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
-    afplay -v "$VOLUME" -t "$MAX_DURATION" "$SOUND_FILE" </dev/null >/dev/null 2>&1 &
+    afplay -v "$EFFECTIVE_VOLUME" -t "$MAX_DURATION" "$SOUND_FILE" </dev/null >/dev/null 2>&1 &
     disown
   fi
 else
