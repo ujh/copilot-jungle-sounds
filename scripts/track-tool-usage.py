@@ -9,7 +9,23 @@ import sqlite3
 import sys
 
 
+def parse_json_container(value):
+    if not isinstance(value, str):
+        return None
+    stripped = value.strip()
+    if not stripped or stripped[0] not in "{[":
+        return None
+    try:
+        parsed = json.loads(stripped)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, (dict, list)) else None
+
+
 def walk(node):
+    parsed = parse_json_container(node)
+    if parsed is not None:
+        node = parsed
     if isinstance(node, dict):
         yield node
         for value in node.values():
@@ -32,6 +48,25 @@ def find_first_string(node, keys):
             if key in keyset and isinstance(value, str) and value.strip():
                 return value.strip()
     return ""
+
+
+def extract_command_text(data):
+    command_keys = ["command", "cmd", "bash", "shellCommand", "shell_command"]
+    for item in walk(data):
+        if not isinstance(item, dict):
+            continue
+        for args_key in ("toolArgs", "tool_args"):
+            args = item.get(args_key)
+            parsed_args = parse_json_container(args)
+            if parsed_args is not None:
+                args = parsed_args
+            if not isinstance(args, dict):
+                continue
+            for key in command_keys:
+                value = args.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+    return find_first_string(data, command_keys)
 
 
 def extract_executable(command_text):
@@ -93,16 +128,7 @@ def main():
     if not tool_name:
         return 0
 
-    command_text = find_first_string(
-        data,
-        [
-            "command",
-            "cmd",
-            "bash",
-            "shellCommand",
-            "shell_command",
-        ],
-    )
+    command_text = extract_command_text(data)
     executable = extract_executable(command_text) if command_text else ""
     if tool_name not in {"bash", "shell", "sh"}:
         executable = ""
