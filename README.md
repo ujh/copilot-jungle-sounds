@@ -2,7 +2,7 @@
 
 Audio feedback plugin for **GitHub Copilot CLI** that plays jungle and nature sounds during agent lifecycle events. Hear tropical birds when tools run, forest ambience when sessions start, and wildlife calls when the agent needs your attention.
 
-The plugin ships with pre-loaded jungle-themed MP3s in a central `sounds/library/` directory, with symlinks distributed across event directories. Each time an event fires, a random sound is picked from the corresponding directory — so your coding sessions get a unique tropical soundscape.
+The plugin ships with pre-loaded jungle-themed audio files (MP3 and WAV) in a central `sounds/library/` directory, with symlinks distributed across event directories. Each time an event fires, a random sound is picked from the corresponding directory — so your coding sessions get a unique tropical soundscape.
 
 ## Hook Events
 
@@ -75,7 +75,7 @@ All sound files live in `sounds/library/`. Event directories contain symlinks po
 
 ```
 sounds/
-├── library/             # 23 unique MP3s (single source of truth)
+├── library/             # Unique audio files — MP3 and WAV (single source of truth)
 ├── preToolUse/          # 23 symlinks (all files)
 ├── postToolUse/         # 23 symlinks (all files)
 ├── sessionStart/        # 11 symlinks (longer atmospheric sounds)
@@ -106,7 +106,7 @@ Sounds are capped at **60 seconds** of playback. Change the `MAX_DURATION` varia
 
 ### Adjusting minimum duration (short file looping)
 
-Sound files shorter than **30 seconds** are automatically looped using `ffplay` to fill at least 30 seconds of playback. The original MP3 files are not modified. Change the `MIN_DURATION` variable at the top of `scripts/play-sound.sh` to adjust. Set to `0` to disable looping. Requires `ffprobe` and `ffplay` (both included with ffmpeg).
+Sound files shorter than **30 seconds** are automatically looped using `ffplay` to fill at least 30 seconds of playback. The original audio files are not modified. Change the `MIN_DURATION` variable at the top of `scripts/play-sound.sh` to adjust. Set to `0` to disable looping. Requires `ffprobe` and `ffplay` (both included with ffmpeg).
 
 ### After making changes
 
@@ -118,9 +118,9 @@ copilot plugin install /full/path/to/copilot-jungle-sounds
 
 ### Adding new sound files
 
-To add new MP3 files to the plugin:
+To add new sound files to the plugin:
 
-1. Drop your `.mp3` files into the `sounds/library/` directory
+1. Drop your `.mp3` or `.wav` files into the `sounds/library/` directory
 2. Run the normalize-and-distribute script:
 
 ```bash
@@ -128,7 +128,7 @@ To add new MP3 files to the plugin:
 ```
 
 This script:
-- **Normalizes volume** of all `*.mp3` files in `sounds/library/` to -23 LUFS using ffmpeg's `loudnorm` filter ([EBU R128](https://en.wikipedia.org/wiki/EBU_R_128) standard, two-pass for accuracy)
+- **Normalizes volume** of all audio files (`*.mp3`, `*.wav`) in `sounds/library/` to -23 LUFS using ffmpeg's `loudnorm` filter ([EBU R128](https://en.wikipedia.org/wiki/EBU_R_128) standard, two-pass for accuracy). Each format is normalized in-place (WAV stays WAV, MP3 stays MP3).
 - **Distributes** symlinks into the `sounds/<event>/` directories based on duration — shorter sounds go to more frequently-fired events (like `preToolUse`), longer atmospheric sounds go to rarer events (like `sessionStart`)
 
 The script is safe to re-run — it re-normalizes all files and recreates symlinks in `sounds/<event>/` directories.

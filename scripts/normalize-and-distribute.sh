@@ -1,8 +1,10 @@
 #!/bin/bash
-# normalize-and-distribute.sh — Normalize MP3 volume and distribute into sounds/<event>/ directories
+# normalize-and-distribute.sh — Normalize audio volume and distribute into sounds/<event>/ directories
 #
 # Uses ffmpeg's loudnorm filter (EBU R128) for perceptual loudness normalization.
 # Two-pass approach: first pass measures, second pass applies precise correction.
+# Supports MP3 and WAV files. Each format is normalized in-place (WAV stays WAV,
+# MP3 stays MP3).
 #
 # Usage:
 #   ./scripts/normalize-and-distribute.sh
@@ -10,8 +12,8 @@
 # Prerequisites:
 #   - ffmpeg (with loudnorm filter support)
 #
-# The script reads *.mp3 from sounds/library/, normalizes them in-place, and
-# creates symlinks in sounds/<event>/ directories based on duration (shorter
+# The script reads *.mp3 and *.wav from sounds/library/, normalizes them in-place,
+# and creates symlinks in sounds/<event>/ directories based on duration (shorter
 # sounds go to more frequently-fired events).
 
 set -euo pipefail
@@ -24,7 +26,7 @@ TARGET_LUFS="-23"
 TARGET_TP="-1.0"
 TARGET_LRA="11"
 
-echo "=== Normalize and Distribute MP3 Sounds ==="
+echo "=== Normalize and Distribute Audio Sounds ==="
 echo "Target loudness: ${TARGET_LUFS} LUFS (EBU R128)"
 echo ""
 
@@ -41,18 +43,18 @@ fi
 # Ensure library directory exists
 mkdir -p "$LIBRARY_DIR"
 
-# Collect MP3 files from sounds/library/
-MP3_FILES=()
-for f in "$LIBRARY_DIR"/*.mp3; do
-  [[ -f "$f" ]] && MP3_FILES+=("$(basename "$f")")
+# Collect MP3 and WAV files from sounds/library/
+AUDIO_FILES=()
+for f in "$LIBRARY_DIR"/*.mp3 "$LIBRARY_DIR"/*.wav; do
+  [[ -f "$f" ]] && AUDIO_FILES+=("$(basename "$f")")
 done
 
-if [[ ${#MP3_FILES[@]} -eq 0 ]]; then
-  echo "No MP3 files found in $LIBRARY_DIR"
+if [[ ${#AUDIO_FILES[@]} -eq 0 ]]; then
+  echo "No audio files (MP3/WAV) found in $LIBRARY_DIR"
   exit 0
 fi
 
-echo "Found ${#MP3_FILES[@]} MP3 files in sounds/library/."
+echo "Found ${#AUDIO_FILES[@]} audio files in sounds/library/."
 echo ""
 
 # Create temp directory for normalized files and metadata
@@ -67,7 +69,7 @@ echo ""
 DURATION_MAP="$TEMP_DIR/_durations.txt"
 > "$DURATION_MAP"
 
-for f in "${MP3_FILES[@]}"; do
+for f in "${AUDIO_FILES[@]}"; do
   echo "Processing: $f"
 
   src="$LIBRARY_DIR/$f"
@@ -96,17 +98,25 @@ for f in "${MP3_FILES[@]}"; do
     continue
   fi
 
-  # Pass 2: Apply normalization with measured values (to temp dir first)
-  ffmpeg -hide_banner -y -i "$src" \
-    -af "loudnorm=I=${TARGET_LUFS}:TP=${TARGET_TP}:LRA=${TARGET_LRA}:measured_I=${input_i}:measured_TP=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh}:linear=true" \
-    -ar 44100 -b:a 192k \
-    "$TEMP_DIR/$f" 2>/dev/null
+  # Pass 2: Apply normalization with format-appropriate output options
+  ext="${f##*.}"
+  if [[ "$ext" == "wav" ]]; then
+    ffmpeg -hide_banner -y -i "$src" \
+      -af "loudnorm=I=${TARGET_LUFS}:TP=${TARGET_TP}:LRA=${TARGET_LRA}:measured_I=${input_i}:measured_TP=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh}:linear=true" \
+      -c:a pcm_s16le -ar 44100 \
+      "$TEMP_DIR/$f" 2>/dev/null
+  else
+    ffmpeg -hide_banner -y -i "$src" \
+      -af "loudnorm=I=${TARGET_LUFS}:TP=${TARGET_TP}:LRA=${TARGET_LRA}:measured_I=${input_i}:measured_TP=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh}:linear=true" \
+      -ar 44100 -b:a 192k \
+      "$TEMP_DIR/$f" 2>/dev/null
+  fi
 
   echo "  ✓ Normalized (${duration_int}s, measured ${input_i} LUFS → target ${TARGET_LUFS} LUFS)"
 done
 
 # Move normalized files back into library (overwrite originals)
-for f in "${MP3_FILES[@]}"; do
+for f in "${AUDIO_FILES[@]}"; do
   mv "$TEMP_DIR/$f" "$LIBRARY_DIR/$f"
 done
 
@@ -166,5 +176,5 @@ assign_files_to_event "sessionEnd"          55 100  # longer, atmospheric (same 
 
 echo ""
 echo "=== Done! ==="
-echo "Normalized files in sounds/library/."
+echo "Normalized audio files in sounds/library/."
 echo "Symlinks distributed into sounds/<event>/ directories."

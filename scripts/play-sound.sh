@@ -1,5 +1,6 @@
 #!/bin/bash
-# play-sound.sh — Plays macOS system sounds based on Copilot CLI hook events.
+# play-sound.sh — Plays sounds based on Copilot CLI hook events.
+# Supports MP3, WAV, and any format handled by afplay/ffplay on macOS.
 # Usage: play-sound.sh <event_name>
 # Event name is passed as a CLI argument from hooks.json.
 
