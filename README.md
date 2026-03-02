@@ -1,19 +1,23 @@
 # 🌴 copilot-jungle-sounds
 
-Audio feedback plugin for **GitHub Copilot CLI** that plays macOS system sounds during agent lifecycle events. Hear when tools run, complete, and when the agent needs your attention.
+Audio feedback plugin for **GitHub Copilot CLI** that plays jungle and nature sounds during agent lifecycle events. Hear tropical birds when tools run, forest ambience when sessions start, and wildlife calls when the agent needs your attention.
 
-## Sound Mapping
+The plugin ships with pre-loaded jungle-themed MP3s distributed across event directories. Each time an event fires, a random sound is picked from the corresponding directory — so your coding sessions get a unique tropical soundscape.
 
-| Event                 | Sound              | Description               |
-| --------------------- | ------------------ | ------------------------- |
-| `preToolUse`          | Tink (soft tick)   | A tool is about to run    |
-| `postToolUse`         | Pop (subtle pop)   | A tool just completed     |
-| `sessionStart`        | Morse (dot)        | A session started         |
-| `sessionEnd`          | Glass (chime)      | A session ended           |
-| `userPromptSubmitted` | Submarine (sonar)  | User submitted a prompt   |
-| `agentStop`           | Purr (gentle hum)  | Agent finished responding |
-| `subagentStop`        | Blow (soft whoosh) | A subagent completed      |
-| `errorOccurred`       | Hero (alert)       | An error occurred         |
+## Hook Events
+
+| Event                 | Sounds | Description               |
+| --------------------- | ------ | ------------------------- |
+| `preToolUse`          | 6      | A tool is about to run    |
+| `postToolUse`         | 6      | A tool just completed     |
+| `sessionStart`        | 11     | A session started         |
+| `sessionEnd`          | 11     | A session ended           |
+| `userPromptSubmitted` | 8      | User submitted a prompt   |
+| `agentStop`           | 8      | Agent finished responding |
+| `subagentStop`        | 8      | A subagent completed      |
+| `errorOccurred`       | 8      | An error occurred         |
+
+Shorter sounds (bird calls, leaf rustles) are assigned to frequent events like `preToolUse`, while longer atmospheric sounds go to rarer events like `sessionStart`. If a `sounds/<event>/` directory is empty, a macOS system sound is used as a fallback.
 
 ## Requirements
 
@@ -63,27 +67,25 @@ tail -f /tmp/copilot-jungle-sounds.log
 
 ## Customization
 
-### Custom sounds per hook
+### Replacing or adding sounds
 
-Drop audio files into the `sounds/<event>/` directory for any hook event. When custom files are present, the plugin randomly picks one each time the hook fires. If the directory is empty, the default system sound is used as a fallback.
+Drop audio files into the `sounds/<event>/` directory for any hook event. The plugin randomly picks one file each time the event fires. Any audio format supported by `afplay` works (`.aiff`, `.wav`, `.mp3`, `.aac`, etc.).
 
 ```
 sounds/
-├── preToolUse/          # Drop custom sounds here for preToolUse
-├── postToolUse/
-├── sessionStart/
-├── sessionEnd/
-├── userPromptSubmitted/
-├── agentStop/
-├── subagentStop/
-└── errorOccurred/
+├── preToolUse/          # 6 short jungle sounds
+├── postToolUse/         # 6 short jungle sounds
+├── sessionStart/        # 11 longer atmospheric sounds
+├── sessionEnd/          # 11 longer atmospheric sounds
+├── userPromptSubmitted/ # 8 short-to-medium sounds
+├── agentStop/           # 8 medium sounds
+├── subagentStop/        # 8 short-medium sounds
+└── errorOccurred/       # 8 medium sounds
 ```
 
-Any audio format supported by `afplay` works (`.aiff`, `.wav`, `.mp3`, `.aac`, etc.).
+### Changing fallback system sounds
 
-### Changing default sounds
-
-Edit `scripts/play-sound.sh` and swap the sound file names in the `case` block. Available macOS system sounds:
+If a `sounds/<event>/` directory is empty, the plugin falls back to a macOS system sound. Edit `scripts/play-sound.sh` and swap the sound file names in the `case` block. Available macOS system sounds:
 
 ```
 Basso  Blow  Bottle  Frog  Funk  Glass  Hero  Morse  Ping  Pop  Purr  Sosumi  Submarine  Tink
