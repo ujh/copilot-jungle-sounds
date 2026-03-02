@@ -18,11 +18,14 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Hook invoked: event='$EVENT'" >> "$LOG
 cat > /dev/null 2>/dev/null || true
 
 case "$EVENT" in
-  preToolUse)      SOUND="Tink.aiff" ;;
-  postToolUse)     SOUND="Pop.aiff" ;;
-  sessionStart)    SOUND="Morse.aiff" ;;
-  sessionEnd)      SOUND="Glass.aiff" ;;
-  errorOccurred)   SOUND="Hero.aiff" ;;
+  preToolUse)            SOUND="Tink.aiff" ;;
+  postToolUse)           SOUND="Pop.aiff" ;;
+  sessionStart)          SOUND="Morse.aiff" ;;
+  sessionEnd)            SOUND="Glass.aiff" ;;
+  userPromptSubmitted)   SOUND="Submarine.aiff" ;;
+  agentStop)             SOUND="Purr.aiff" ;;
+  subagentStop)          SOUND="Blow.aiff" ;;
+  errorOccurred)         SOUND="Hero.aiff" ;;
   *)
     echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Unknown event: '$EVENT'" >> "$LOG_FILE"
     exit 0

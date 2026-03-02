@@ -4,13 +4,16 @@ Audio feedback plugin for **GitHub Copilot CLI** that plays macOS system sounds 
 
 ## Sound Mapping
 
-| Event           | Sound               | Description                  |
-|-----------------|---------------------|------------------------------|
-| `preToolUse`    | Tink (soft tick)    | A tool is about to run       |
-| `postToolUse`   | Pop (subtle pop)    | A tool just completed        |
-| `sessionStart`  | Morse (dot)         | A session started            |
-| `sessionEnd`    | Glass (chime)       | Agent finished responding    |
-| `errorOccurred` | Hero (alert)        | An error occurred            |
+| Event                  | Sound                  | Description                  |
+|------------------------|------------------------|------------------------------|
+| `preToolUse`           | Tink (soft tick)       | A tool is about to run       |
+| `postToolUse`          | Pop (subtle pop)       | A tool just completed        |
+| `sessionStart`         | Morse (dot)            | A session started            |
+| `sessionEnd`           | Glass (chime)          | A session ended              |
+| `userPromptSubmitted`  | Submarine (sonar)      | User submitted a prompt      |
+| `agentStop`            | Purr (gentle hum)      | Agent finished responding    |
+| `subagentStop`         | Blow (soft whoosh)     | A subagent completed         |
+| `errorOccurred`        | Hero (alert)           | An error occurred            |
 
 ## Requirements
 
