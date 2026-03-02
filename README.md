@@ -18,6 +18,7 @@ Audio feedback plugin for **GitHub Copilot CLI** that plays macOS system sounds 
 ## Requirements
 
 - **macOS** (uses `afplay` and `/System/Library/Sounds/`)
+- **ffmpeg** (only needed for normalizing/distributing sound files)
 
 ## Installation
 
@@ -105,6 +106,26 @@ Re-install the plugin to pick up your edits:
 ```bash
 copilot plugin install ./copilot-jungle-sounds
 ```
+
+### Adding new sound files
+
+To add new MP3 files to the plugin:
+
+1. Drop your `.mp3` files into the repository root directory
+2. Run the normalize-and-distribute script:
+
+```bash
+./scripts/normalize-and-distribute.sh
+```
+
+This script:
+- **Normalizes volume** of all `*.mp3` files in the repo root to -23 LUFS using ffmpeg's `loudnorm` filter ([EBU R128](https://en.wikipedia.org/wiki/EBU_R_128) standard, two-pass for accuracy)
+- **Distributes** normalized files into the `sounds/<event>/` directories based on duration — shorter sounds go to more frequently-fired events (like `preToolUse`), longer atmospheric sounds go to rarer events (like `sessionStart`)
+- **Keeps originals** in the root directory untouched
+
+The script is safe to re-run — it clears existing files in `sounds/<event>/` directories before redistributing.
+
+> **Prerequisite:** ffmpeg must be installed (`brew install ffmpeg`).
 
 ## Uninstalling
 
