@@ -8,6 +8,7 @@ set -euo pipefail
 SOUNDS_DIR="/System/Library/Sounds"
 VOLUME="0.10"
 MAX_DURATION="60"
+MIN_DURATION="30"
 LOG_FILE="/tmp/copilot-jungle-sounds-$(date '+%Y-%m-%d').log"
 
 EVENT="${1:-}"
@@ -50,11 +51,29 @@ if [[ ${#CUSTOM_FILES[@]} -gt 0 ]]; then
   echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Custom sound selected: $SOUND_FILE (${#CUSTOM_FILES[@]} available)" >> "$LOG_FILE"
 fi
 
-if [[ -f "$SOUND_FILE" ]] && command -v afplay &>/dev/null; then
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
-  afplay -v "$VOLUME" -t "$MAX_DURATION" "$SOUND_FILE" &
+if [[ ! -f "$SOUND_FILE" ]]; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot play: file=$SOUND_FILE not found" >> "$LOG_FILE"
+elif command -v afplay &>/dev/null; then
+  # Check if the file is short and needs looping
+  NEEDS_LOOP=false
+  if command -v ffprobe &>/dev/null; then
+    FILE_DURATION=$(ffprobe -i "$SOUND_FILE" -show_entries format=duration -v quiet -of csv="p=0" 2>/dev/null || echo "")
+    FILE_DURATION_INT=${FILE_DURATION%.*}
+    if [[ -n "$FILE_DURATION_INT" ]] && [[ "$FILE_DURATION_INT" -lt "$MIN_DURATION" ]]; then
+      NEEDS_LOOP=true
+    fi
+  fi
+
+  if [[ "$NEEDS_LOOP" == true ]] && command -v ffplay &>/dev/null; then
+    FFPLAY_VOLUME=$(awk "BEGIN {printf \"%d\", $VOLUME * 100}")
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Looping short file (${FILE_DURATION_INT}s < ${MIN_DURATION}s): $SOUND_FILE" >> "$LOG_FILE"
+    ffplay -nodisp -autoexit -loglevel quiet -volume "$FFPLAY_VOLUME" -stream_loop -1 -t "$MIN_DURATION" "$SOUND_FILE" &
+  else
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
+    afplay -v "$VOLUME" -t "$MAX_DURATION" "$SOUND_FILE" &
+  fi
 else
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot play: file=$SOUND_FILE afplay=$(command -v afplay 2>/dev/null || echo 'not found')" >> "$LOG_FILE"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot play: afplay not found" >> "$LOG_FILE"
 fi
 
 exit 0

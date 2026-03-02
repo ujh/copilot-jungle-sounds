@@ -22,7 +22,7 @@ Tool-use events (`preToolUse`, `postToolUse`) include all sounds for maximum var
 ## Requirements
 
 - **macOS** (uses `afplay` and `/System/Library/Sounds/`)
-- **ffmpeg** (only needed for normalizing/distributing sound files)
+- **ffmpeg** (needed for normalizing/distributing sound files, and for looping short sounds during playback via `ffplay`/`ffprobe`)
 
 ## Installation
 
@@ -101,6 +101,10 @@ Change the `VOLUME` variable at the top of `scripts/play-sound.sh` (0.0 = silent
 ### Adjusting max duration
 
 Sounds are capped at **60 seconds** of playback. Change the `MAX_DURATION` variable at the top of `scripts/play-sound.sh` to adjust (value is in seconds).
+
+### Adjusting minimum duration (short file looping)
+
+Sound files shorter than **30 seconds** are automatically looped using `ffplay` to fill at least 30 seconds of playback. The original MP3 files are not modified. Change the `MIN_DURATION` variable at the top of `scripts/play-sound.sh` to adjust. Set to `0` to disable looping. Requires `ffprobe` and `ffplay` (both included with ffmpeg).
 
 ### After making changes
 
