@@ -10,14 +10,41 @@ SOUNDS_DIR="/System/Library/Sounds"
 VOLUME="0.10"
 MIN_DURATION="30"
 LOG_FILE="/tmp/copilot-jungle-sounds-$(date '+%Y-%m-%d').log"
+USAGE_DIR="${HOME}/.copilot-jungle-sounds"
+USAGE_DB="${USAGE_DIR}/usage.db"
+PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+TRACK_USAGE_SCRIPT="$PLUGIN_DIR/scripts/track-tool-usage.py"
 
 EVENT="${1:-}"
+HOOK_PAYLOAD="$(cat 2>/dev/null || true)"
 
 # Log invocation
 echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Hook invoked: event='$EVENT'" >> "$LOG_FILE"
 
-# Drain stdin (Copilot CLI sends JSON on stdin; we don't need it but must consume it)
-cat <&0 > /dev/null 2>/dev/null &
+record_tool_usage() {
+  local event="$1"
+  local payload="$2"
+
+  [[ "$event" != "preToolUse" ]] && return 0
+  [[ -z "${payload//[[:space:]]/}" ]] && return 0
+
+  if ! command -v python3 &>/dev/null; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot record usage: python3 not found" >> "$LOG_FILE"
+    return 0
+  fi
+
+  if [[ ! -f "$TRACK_USAGE_SCRIPT" ]]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot record usage: tracker script not found" >> "$LOG_FILE"
+    return 0
+  fi
+
+  if ! printf '%s' "$payload" | EVENT_NAME="$event" USAGE_DB_PATH="$USAGE_DB" python3 "$TRACK_USAGE_SCRIPT"
+  then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Failed to persist tool usage data" >> "$LOG_FILE"
+  fi
+}
+
+record_tool_usage "$EVENT" "$HOOK_PAYLOAD"
 
 case "$EVENT" in
   preToolUse)            SOUND="Tink.aiff" ;;
@@ -43,7 +70,6 @@ esac
 SOUND_FILE="$SOUNDS_DIR/$SOUND"
 
 # Check for custom sounds in sounds/<event>/ directory
-PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CUSTOM_SOUNDS_DIR="$PLUGIN_DIR/sounds/$EVENT"
 CUSTOM_FILES=()
 if [[ -d "$CUSTOM_SOUNDS_DIR" ]]; then

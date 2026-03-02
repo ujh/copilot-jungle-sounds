@@ -67,6 +67,29 @@ Hook invocations are logged to `/tmp/copilot-jungle-sounds-YYYY-MM-DD.log` (dail
 tail -f "/tmp/copilot-jungle-sounds-$(date +%Y-%m-%d).log"
 ```
 
+## Tool Usage Statistics
+
+Tool usage is tracked from `preToolUse` hook payloads into SQLite at:
+
+```text
+~/.copilot-jungle-sounds/usage.db
+```
+
+Stored fields are limited to:
+- hook event
+- tool name
+- executable name for shell tools (for example `find`)
+
+The full command text is not stored.
+
+Generate stats on demand:
+
+```bash
+./scripts/tool-stats.sh
+./scripts/tool-stats.sh --today
+./scripts/tool-stats.sh --since 2026-03-01T00:00:00
+```
+
 ## Customization
 
 ### Replacing or adding sounds
