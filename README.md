@@ -6,16 +6,16 @@ The plugin ships with pre-loaded jungle-themed audio files (MP3 and WAV) in a ce
 
 ## Hook Events
 
-| Event                 | Sounds | Description               |
-| --------------------- | ------ | ------------------------- |
-| `preToolUse`          | 23     | A tool is about to run    |
-| `postToolUse`         | 23     | A tool just completed     |
-| `sessionStart`        | 11     | A session started         |
-| `sessionEnd`          | 11     | A session ended           |
-| `userPromptSubmitted` | 8      | User submitted a prompt   |
-| `agentStop`           | 8      | Agent finished responding |
-| `subagentStop`        | 8      | A subagent completed      |
-| `errorOccurred`       | 8      | An error occurred         |
+| Event                 | Sounds                   | Description               |
+| --------------------- | ------------------------ | ------------------------- |
+| `preToolUse`          | All library sounds       | A tool is about to run    |
+| `postToolUse`         | All library sounds       | A tool just completed     |
+| `sessionStart`        | Longer-duration subset   | A session started         |
+| `sessionEnd`          | Longer-duration subset   | A session ended           |
+| `userPromptSubmitted` | Short-to-medium subset   | User submitted a prompt   |
+| `agentStop`           | Medium subset            | Agent finished responding |
+| `subagentStop`        | Short-medium subset      | A subagent completed      |
+| `errorOccurred`       | Medium/distinctive subset | An error occurred         |
 
 Tool-use events (`preToolUse`, `postToolUse`) include all sounds for maximum variety, while other events use duration-based subsets — shorter sounds for frequent events, longer atmospheric sounds for rarer ones like `sessionStart`. Event directories contain symlinks to the central `sounds/library/` to avoid file duplication. If a `sounds/<event>/` directory is empty, a macOS system sound is used as a fallback.
 
@@ -76,14 +76,14 @@ All sound files live in `sounds/library/`. Event directories contain symlinks po
 ```
 sounds/
 ├── library/             # Unique audio files — MP3 and WAV (single source of truth)
-├── preToolUse/          # 23 symlinks (all files)
-├── postToolUse/         # 23 symlinks (all files)
-├── sessionStart/        # 11 symlinks (longer atmospheric sounds)
-├── sessionEnd/          # 11 symlinks (longer atmospheric sounds)
-├── userPromptSubmitted/ # 8 symlinks (short-to-medium sounds)
-├── agentStop/           # 8 symlinks (medium sounds)
-├── subagentStop/        # 8 symlinks (short-medium sounds)
-└── errorOccurred/       # 8 symlinks (medium sounds)
+├── preToolUse/          # symlinks to all library files
+├── postToolUse/         # symlinks to all library files
+├── sessionStart/        # longer atmospheric subset
+├── sessionEnd/          # longer atmospheric subset
+├── userPromptSubmitted/ # short-to-medium subset
+├── agentStop/           # medium subset
+├── subagentStop/        # short-medium subset
+└── errorOccurred/       # medium/distinctive subset
 ```
 
 ### Changing fallback system sounds
@@ -98,15 +98,19 @@ All located at `/System/Library/Sounds/*.aiff`.
 
 ### Adjusting volume
 
-Change the `VOLUME` variable at the top of `scripts/play-sound.sh` (0.0 = silent, 1.0 = full volume, default is 0.3).
+Change the `VOLUME` variable at the top of `scripts/play-sound.sh` (0.0 = silent, 1.0 = full volume, default is `0.10`).
 
 ### Adjusting max duration
 
-Sounds are capped at **60 seconds** of playback. Change the `MAX_DURATION` variable at the top of `scripts/play-sound.sh` to adjust (value is in seconds).
+Playback duration is set in `scripts/play-sound.sh` by event type:
+- `preToolUse` and `postToolUse`: `60` seconds
+- all other events: `120` seconds
+
+Adjust those values in the event-duration `case` block to customize max playback time.
 
 ### Adjusting minimum duration (short file looping)
 
-Sound files shorter than **30 seconds** are automatically looped using `ffplay` to fill at least 30 seconds of playback. The original audio files are not modified. Change the `MIN_DURATION` variable at the top of `scripts/play-sound.sh` to adjust. Set to `0` to disable looping. Requires `ffprobe` and `ffplay` (both included with ffmpeg).
+Sound files shorter than **30 seconds** are automatically looped using `ffplay` so playback can fill the configured event duration window. The original audio files are not modified. Change the `MIN_DURATION` variable at the top of `scripts/play-sound.sh` to adjust. Set to `0` to disable looping. Requires `ffprobe` and `ffplay` (both included with ffmpeg).
 
 ### After making changes
 
