@@ -7,7 +7,6 @@ set -euo pipefail
 
 SOUNDS_DIR="/System/Library/Sounds"
 VOLUME="0.10"
-MAX_DURATION="60"
 MIN_DURATION="30"
 LOG_FILE="/tmp/copilot-jungle-sounds-$(date '+%Y-%m-%d').log"
 
@@ -32,6 +31,12 @@ case "$EVENT" in
     echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Unknown event: '$EVENT'" >> "$LOG_FILE"
     exit 0
     ;;
+esac
+
+# Set max playback duration based on event type
+case "$EVENT" in
+  preToolUse|postToolUse) MAX_DURATION="60" ;;
+  *)                      MAX_DURATION="120" ;;
 esac
 
 SOUND_FILE="$SOUNDS_DIR/$SOUND"
@@ -67,7 +72,7 @@ elif command -v afplay &>/dev/null; then
   if [[ "$NEEDS_LOOP" == true ]] && command -v ffplay &>/dev/null; then
     FFPLAY_VOLUME=$(awk "BEGIN {printf \"%d\", $VOLUME * 100}")
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Looping short file (${FILE_DURATION_INT}s < ${MIN_DURATION}s): $SOUND_FILE" >> "$LOG_FILE"
-    ffplay -nodisp -autoexit -loglevel quiet -volume "$FFPLAY_VOLUME" -stream_loop -1 -t "$MIN_DURATION" "$SOUND_FILE" </dev/null >/dev/null 2>&1 &
+    ffplay -nodisp -autoexit -loglevel quiet -volume "$FFPLAY_VOLUME" -stream_loop -1 -t "$MAX_DURATION" "$SOUND_FILE" </dev/null >/dev/null 2>&1 &
     disown
   else
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
