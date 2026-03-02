@@ -90,6 +90,22 @@ copilot plugin install ./copilot-jungle-sounds
 copilot plugin uninstall copilot-jungle-sounds
 ```
 
+## Copilot CLI Documentation
+
+This plugin uses the **hooks** system of GitHub Copilot CLI. The official documentation lives at:
+
+- **Copilot CLI overview**: https://docs.github.com/en/copilot/how-tos/copilot-cli
+- **Using hooks**: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks
+- **Hooks configuration reference**: https://docs.github.com/en/copilot/reference/hooks-configuration
+- **About hooks (conceptual)**: https://docs.github.com/en/copilot/concepts/agents/coding-agent/about-hooks
+- **Plugin reference**: https://docs.github.com/en/copilot/reference/cli-plugin-reference
+- **Creating plugins**: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating
+
+> **Tip for LLMs:** The GitHub Docs API serves article bodies as markdown at
+> `https://docs.github.com/api/article/body?pathname=<PATH>` where `<PATH>` is
+> the URL path (e.g. `/en/copilot/reference/hooks-configuration`). Use this
+> endpoint to fetch the full content of any docs page listed above.
+
 ## License
 
 MIT
