@@ -28,9 +28,13 @@ echo "=== Normalize and Distribute MP3 Sounds ==="
 echo "Target loudness: ${TARGET_LUFS} LUFS (EBU R128)"
 echo ""
 
-# Check ffmpeg is available
+# Check ffmpeg and ffprobe are available
 if ! command -v ffmpeg &>/dev/null; then
   echo "ERROR: ffmpeg is required but not found. Install it with: brew install ffmpeg" >&2
+  exit 1
+fi
+if ! command -v ffprobe &>/dev/null; then
+  echo "ERROR: ffprobe is required but not found. Install it with: brew install ffmpeg" >&2
   exit 1
 fi
 
@@ -72,8 +76,8 @@ for f in "${MP3_FILES[@]}"; do
   duration=$(ffprobe -i "$src" -show_entries format=duration -v quiet -of csv="p=0")
   duration_int=${duration%.*}
 
-  # Record duration for later sorting
-  echo "${duration_int} ${f}" >> "$DURATION_MAP"
+  # Record duration for later sorting (tab-delimited for filenames with spaces)
+  printf '%s\t%s\n' "${duration_int}" "${f}" >> "$DURATION_MAP"
 
   # Pass 1: Measure loudness
   measure=$(ffmpeg -hide_banner -i "$src" \
@@ -84,6 +88,13 @@ for f in "${MP3_FILES[@]}"; do
   input_tp=$(echo "$measure" | grep '"input_tp"' | sed 's/.*: "//;s/".*//')
   input_lra=$(echo "$measure" | grep '"input_lra"' | sed 's/.*: "//;s/".*//')
   input_thresh=$(echo "$measure" | grep '"input_thresh"' | sed 's/.*: "//;s/".*//')
+
+  # Validate measurements before pass 2
+  if [[ -z "$input_i" || -z "$input_tp" || -z "$input_lra" || -z "$input_thresh" ]]; then
+    echo "  ⚠ Skipping normalization (could not measure loudness): $f" >&2
+    cp "$src" "$TEMP_DIR/$f"
+    continue
+  fi
 
   # Pass 2: Apply normalization with measured values (to temp dir first)
   ffmpeg -hide_banner -y -i "$src" \
@@ -106,9 +117,7 @@ echo ""
 # Sort files by duration (shortest first) and read into array
 sorted_files=()
 sorted_durations=()
-while IFS= read -r line; do
-  dur="${line%% *}"
-  fname="${line#* }"
+while IFS=$'\t' read -r dur fname; do
   sorted_files+=("$fname")
   sorted_durations+=("$dur")
 done < <(sort -n "$DURATION_MAP")

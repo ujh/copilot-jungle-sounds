@@ -1,6 +1,6 @@
 {
   "name": "copilot-jungle-sounds",
-  "description": "Audio feedback plugin that plays macOS system sounds during agent lifecycle events — hear when tools run, complete, and when the agent needs your attention.",
+  "description": "Audio feedback plugin that plays jungle and nature sounds during agent lifecycle events — hear tropical birds when tools run, forest ambience when sessions start, and wildlife calls when the agent needs your attention.",
   "version": "1.0.0",
   "author": {
     "name": "Urban Hafner"

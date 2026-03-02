@@ -17,7 +17,7 @@ EVENT="${1:-}"
 echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Hook invoked: event='$EVENT'" >> "$LOG_FILE"
 
 # Drain stdin (Copilot CLI sends JSON on stdin; we don't need it but must consume it)
-timeout 1 cat > /dev/null 2>/dev/null || true
+cat <&0 > /dev/null 2>/dev/null &
 
 case "$EVENT" in
   preToolUse)            SOUND="Tink.aiff" ;;

@@ -19,6 +19,8 @@ The plugin ships with pre-loaded jungle-themed MP3s in a central `sounds/library
 
 Tool-use events (`preToolUse`, `postToolUse`) include all sounds for maximum variety, while other events use duration-based subsets — shorter sounds for frequent events, longer atmospheric sounds for rarer ones like `sessionStart`. Event directories contain symlinks to the central `sounds/library/` to avoid file duplication. If a `sounds/<event>/` directory is empty, a macOS system sound is used as a fallback.
 
+> **Soundscape design:** Sounds are intentionally allowed to overlap — when multiple events fire in quick succession (e.g., rapid tool calls), the layered audio creates an evolving jungle soundscape rather than cutting off abruptly.
+
 ## Requirements
 
 - **macOS** (uses `afplay` and `/System/Library/Sounds/`)
