@@ -62,7 +62,25 @@ tail -f /tmp/copilot-jungle-sounds.log
 
 ## Customization
 
-### Changing sounds
+### Custom sounds per hook
+
+Drop audio files into the `sounds/<event>/` directory for any hook event. When custom files are present, the plugin randomly picks one each time the hook fires. If the directory is empty, the default system sound is used as a fallback.
+
+```
+sounds/
+├── preToolUse/          # Drop custom sounds here for preToolUse
+├── postToolUse/
+├── sessionStart/
+├── sessionEnd/
+├── userPromptSubmitted/
+├── agentStop/
+├── subagentStop/
+└── errorOccurred/
+```
+
+Any audio format supported by `afplay` works (`.aiff`, `.wav`, `.mp3`, `.aac`, etc.).
+
+### Changing default sounds
 
 Edit `scripts/play-sound.sh` and swap the sound file names in the `case` block. Available macOS system sounds:
 

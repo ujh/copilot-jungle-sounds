@@ -34,6 +34,21 @@ esac
 
 SOUND_FILE="$SOUNDS_DIR/$SOUND"
 
+# Check for custom sounds in sounds/<event>/ directory
+PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CUSTOM_SOUNDS_DIR="$PLUGIN_DIR/sounds/$EVENT"
+CUSTOM_FILES=()
+if [[ -d "$CUSTOM_SOUNDS_DIR" ]]; then
+  while IFS= read -r -d '' f; do
+    CUSTOM_FILES+=("$f")
+  done < <(find "$CUSTOM_SOUNDS_DIR" -maxdepth 1 -type f ! -name '.keep' -print0 2>/dev/null)
+fi
+
+if [[ ${#CUSTOM_FILES[@]} -gt 0 ]]; then
+  SOUND_FILE="${CUSTOM_FILES[$((RANDOM % ${#CUSTOM_FILES[@]}))]}"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Custom sound selected: $SOUND_FILE (${#CUSTOM_FILES[@]} available)" >> "$LOG_FILE"
+fi
+
 if [[ -f "$SOUND_FILE" ]] && command -v afplay &>/dev/null; then
   echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
   afplay -v "$VOLUME" "$SOUND_FILE" &
