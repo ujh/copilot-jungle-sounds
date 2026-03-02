@@ -17,7 +17,7 @@ EVENT="${1:-}"
 echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Hook invoked: event='$EVENT'" >> "$LOG_FILE"
 
 # Drain stdin (Copilot CLI sends JSON on stdin; we don't need it but must consume it)
-cat > /dev/null 2>/dev/null || true
+timeout 1 cat > /dev/null 2>/dev/null || true
 
 case "$EVENT" in
   preToolUse)            SOUND="Tink.aiff" ;;
@@ -67,10 +67,12 @@ elif command -v afplay &>/dev/null; then
   if [[ "$NEEDS_LOOP" == true ]] && command -v ffplay &>/dev/null; then
     FFPLAY_VOLUME=$(awk "BEGIN {printf \"%d\", $VOLUME * 100}")
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Looping short file (${FILE_DURATION_INT}s < ${MIN_DURATION}s): $SOUND_FILE" >> "$LOG_FILE"
-    ffplay -nodisp -autoexit -loglevel quiet -volume "$FFPLAY_VOLUME" -stream_loop -1 -t "$MIN_DURATION" "$SOUND_FILE" &
+    ffplay -nodisp -autoexit -loglevel quiet -volume "$FFPLAY_VOLUME" -stream_loop -1 -t "$MIN_DURATION" "$SOUND_FILE" </dev/null >/dev/null 2>&1 &
+    disown
   else
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
-    afplay -v "$VOLUME" -t "$MAX_DURATION" "$SOUND_FILE" &
+    afplay -v "$VOLUME" -t "$MAX_DURATION" "$SOUND_FILE" </dev/null >/dev/null 2>&1 &
+    disown
   fi
 else
   echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot play: afplay not found" >> "$LOG_FILE"
