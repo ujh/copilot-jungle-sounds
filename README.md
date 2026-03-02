@@ -59,10 +59,10 @@ Alternatively, you can disable **all hooks** (from all sources) by adding `"disa
 
 ## Debugging
 
-Hook invocations are logged to `/tmp/copilot-jungle-sounds.log`. Check this file to verify hooks are firing:
+Hook invocations are logged to `/tmp/copilot-jungle-sounds-YYYY-MM-DD.log` (daily file). Check today's file to verify hooks are firing:
 
 ```bash
-tail -f /tmp/copilot-jungle-sounds.log
+tail -f "/tmp/copilot-jungle-sounds-$(date +%Y-%m-%d).log"
 ```
 
 ## Customization
