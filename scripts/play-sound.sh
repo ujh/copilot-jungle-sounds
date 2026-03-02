@@ -42,7 +42,7 @@ CUSTOM_FILES=()
 if [[ -d "$CUSTOM_SOUNDS_DIR" ]]; then
   while IFS= read -r -d '' f; do
     CUSTOM_FILES+=("$f")
-  done < <(find "$CUSTOM_SOUNDS_DIR" -maxdepth 1 -type f ! -name '.keep' -print0 2>/dev/null)
+  done < <(find -L "$CUSTOM_SOUNDS_DIR" -maxdepth 1 -type f -print0 2>/dev/null)
 fi
 
 if [[ ${#CUSTOM_FILES[@]} -gt 0 ]]; then

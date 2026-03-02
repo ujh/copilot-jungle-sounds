@@ -2,7 +2,7 @@
 
 Audio feedback plugin for **GitHub Copilot CLI** that plays jungle and nature sounds during agent lifecycle events. Hear tropical birds when tools run, forest ambience when sessions start, and wildlife calls when the agent needs your attention.
 
-The plugin ships with pre-loaded jungle-themed MP3s distributed across event directories. Each time an event fires, a random sound is picked from the corresponding directory — so your coding sessions get a unique tropical soundscape.
+The plugin ships with pre-loaded jungle-themed MP3s in a central `sounds/library/` directory, with symlinks distributed across event directories. Each time an event fires, a random sound is picked from the corresponding directory — so your coding sessions get a unique tropical soundscape.
 
 ## Hook Events
 
@@ -17,7 +17,7 @@ The plugin ships with pre-loaded jungle-themed MP3s distributed across event dir
 | `subagentStop`        | 8      | A subagent completed      |
 | `errorOccurred`       | 8      | An error occurred         |
 
-Tool-use events (`preToolUse`, `postToolUse`) include all sounds for maximum variety, while other events use duration-based subsets — shorter sounds for frequent events, longer atmospheric sounds for rarer ones like `sessionStart`. If a `sounds/<event>/` directory is empty, a macOS system sound is used as a fallback.
+Tool-use events (`preToolUse`, `postToolUse`) include all sounds for maximum variety, while other events use duration-based subsets — shorter sounds for frequent events, longer atmospheric sounds for rarer ones like `sessionStart`. Event directories contain symlinks to the central `sounds/library/` to avoid file duplication. If a `sounds/<event>/` directory is empty, a macOS system sound is used as a fallback.
 
 ## Requirements
 
@@ -69,18 +69,19 @@ tail -f "/tmp/copilot-jungle-sounds-$(date +%Y-%m-%d).log"
 
 ### Replacing or adding sounds
 
-Drop audio files into the `sounds/<event>/` directory for any hook event. The plugin randomly picks one file each time the event fires. Any audio format supported by `afplay` works (`.aiff`, `.wav`, `.mp3`, `.aac`, etc.).
+All sound files live in `sounds/library/`. Event directories contain symlinks pointing to `../library/`, so each file is stored only once on disk. You can also drop files directly into a `sounds/<event>/` directory for event-specific sounds. The plugin randomly picks one file each time the event fires. Any audio format supported by `afplay` works (`.aiff`, `.wav`, `.mp3`, `.aac`, etc.).
 
 ```
 sounds/
-├── preToolUse/          # 23 jungle sounds (all files)
-├── postToolUse/         # 23 jungle sounds (all files)
-├── sessionStart/        # 11 longer atmospheric sounds
-├── sessionEnd/          # 11 longer atmospheric sounds
-├── userPromptSubmitted/ # 8 short-to-medium sounds
-├── agentStop/           # 8 medium sounds
-├── subagentStop/        # 8 short-medium sounds
-└── errorOccurred/       # 8 medium sounds
+├── library/             # 23 unique MP3s (single source of truth)
+├── preToolUse/          # 23 symlinks (all files)
+├── postToolUse/         # 23 symlinks (all files)
+├── sessionStart/        # 11 symlinks (longer atmospheric sounds)
+├── sessionEnd/          # 11 symlinks (longer atmospheric sounds)
+├── userPromptSubmitted/ # 8 symlinks (short-to-medium sounds)
+├── agentStop/           # 8 symlinks (medium sounds)
+├── subagentStop/        # 8 symlinks (short-medium sounds)
+└── errorOccurred/       # 8 symlinks (medium sounds)
 ```
 
 ### Changing fallback system sounds
@@ -113,7 +114,7 @@ copilot plugin install ./copilot-jungle-sounds
 
 To add new MP3 files to the plugin:
 
-1. Drop your `.mp3` files into the repository root directory
+1. Drop your `.mp3` files into the `sounds/library/` directory
 2. Run the normalize-and-distribute script:
 
 ```bash
@@ -121,11 +122,10 @@ To add new MP3 files to the plugin:
 ```
 
 This script:
-- **Normalizes volume** of all `*.mp3` files in the repo root to -23 LUFS using ffmpeg's `loudnorm` filter ([EBU R128](https://en.wikipedia.org/wiki/EBU_R_128) standard, two-pass for accuracy)
-- **Distributes** normalized files into the `sounds/<event>/` directories based on duration — shorter sounds go to more frequently-fired events (like `preToolUse`), longer atmospheric sounds go to rarer events (like `sessionStart`)
-- **Keeps originals** in the root directory untouched
+- **Normalizes volume** of all `*.mp3` files in `sounds/library/` to -23 LUFS using ffmpeg's `loudnorm` filter ([EBU R128](https://en.wikipedia.org/wiki/EBU_R_128) standard, two-pass for accuracy)
+- **Distributes** symlinks into the `sounds/<event>/` directories based on duration — shorter sounds go to more frequently-fired events (like `preToolUse`), longer atmospheric sounds go to rarer events (like `sessionStart`)
 
-The script is safe to re-run — it clears existing files in `sounds/<event>/` directories before redistributing.
+The script is safe to re-run — it re-normalizes all files and recreates symlinks in `sounds/<event>/` directories.
 
 > **Prerequisite:** ffmpeg must be installed (`brew install ffmpeg`).
 

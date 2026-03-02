@@ -10,14 +10,15 @@
 # Prerequisites:
 #   - ffmpeg (with loudnorm filter support)
 #
-# The script reads *.mp3 from the repo root, normalizes them, and distributes
-# into sounds/<event>/ directories based on duration (shorter sounds go to
-# more frequently-fired events).
+# The script reads *.mp3 from sounds/library/, normalizes them in-place, and
+# creates symlinks in sounds/<event>/ directories based on duration (shorter
+# sounds go to more frequently-fired events).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+LIBRARY_DIR="$PLUGIN_DIR/sounds/library"
 
 TARGET_LUFS="-23"
 TARGET_TP="-1.0"
@@ -33,19 +34,21 @@ if ! command -v ffmpeg &>/dev/null; then
   exit 1
 fi
 
-# Collect MP3 files from repo root
-cd "$PLUGIN_DIR"
+# Ensure library directory exists
+mkdir -p "$LIBRARY_DIR"
+
+# Collect MP3 files from sounds/library/
 MP3_FILES=()
-for f in *.mp3; do
-  [[ -f "$f" ]] && MP3_FILES+=("$f")
+for f in "$LIBRARY_DIR"/*.mp3; do
+  [[ -f "$f" ]] && MP3_FILES+=("$(basename "$f")")
 done
 
 if [[ ${#MP3_FILES[@]} -eq 0 ]]; then
-  echo "No MP3 files found in $PLUGIN_DIR"
+  echo "No MP3 files found in $LIBRARY_DIR"
   exit 0
 fi
 
-echo "Found ${#MP3_FILES[@]} MP3 files to process."
+echo "Found ${#MP3_FILES[@]} MP3 files in sounds/library/."
 echo ""
 
 # Create temp directory for normalized files and metadata
@@ -63,15 +66,17 @@ DURATION_MAP="$TEMP_DIR/_durations.txt"
 for f in "${MP3_FILES[@]}"; do
   echo "Processing: $f"
 
+  src="$LIBRARY_DIR/$f"
+
   # Get duration
-  duration=$(ffprobe -i "$f" -show_entries format=duration -v quiet -of csv="p=0")
+  duration=$(ffprobe -i "$src" -show_entries format=duration -v quiet -of csv="p=0")
   duration_int=${duration%.*}
 
   # Record duration for later sorting
   echo "${duration_int} ${f}" >> "$DURATION_MAP"
 
   # Pass 1: Measure loudness
-  measure=$(ffmpeg -hide_banner -i "$f" \
+  measure=$(ffmpeg -hide_banner -i "$src" \
     -af "loudnorm=I=${TARGET_LUFS}:TP=${TARGET_TP}:LRA=${TARGET_LRA}:print_format=json" \
     -f null /dev/null 2>&1)
 
@@ -80,8 +85,8 @@ for f in "${MP3_FILES[@]}"; do
   input_lra=$(echo "$measure" | grep '"input_lra"' | sed 's/.*: "//;s/".*//')
   input_thresh=$(echo "$measure" | grep '"input_thresh"' | sed 's/.*: "//;s/".*//')
 
-  # Pass 2: Apply normalization with measured values
-  ffmpeg -hide_banner -y -i "$f" \
+  # Pass 2: Apply normalization with measured values (to temp dir first)
+  ffmpeg -hide_banner -y -i "$src" \
     -af "loudnorm=I=${TARGET_LUFS}:TP=${TARGET_TP}:LRA=${TARGET_LRA}:measured_I=${input_i}:measured_TP=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh}:linear=true" \
     -ar 44100 -b:a 192k \
     "$TEMP_DIR/$f" 2>/dev/null
@@ -89,8 +94,13 @@ for f in "${MP3_FILES[@]}"; do
   echo "  ✓ Normalized (${duration_int}s, measured ${input_i} LUFS → target ${TARGET_LUFS} LUFS)"
 done
 
+# Move normalized files back into library (overwrite originals)
+for f in "${MP3_FILES[@]}"; do
+  mv "$TEMP_DIR/$f" "$LIBRARY_DIR/$f"
+done
+
 echo ""
-echo "--- Distributing files into sounds/ directories ---"
+echo "--- Distributing symlinks into sounds/ directories ---"
 echo ""
 
 # Sort files by duration (shortest first) and read into array
@@ -118,15 +128,15 @@ assign_files_to_event() {
   [[ $start_idx -ge $end_idx ]] && start_idx=$(( end_idx - 1 ))
   [[ $start_idx -lt 0 ]] && start_idx=0
 
-  # Clear existing files (except .keep)
-  find "$event_dir" -maxdepth 1 -type f ! -name '.keep' -delete 2>/dev/null || true
+  # Clear existing files and symlinks
+  find "$event_dir" -maxdepth 1 \( -type f -o -type l \) -delete 2>/dev/null || true
 
   local count=0
   local i=$start_idx
   while [[ $i -lt $end_idx ]]; do
-    local src="$TEMP_DIR/${sorted_files[$i]}"
-    if [[ -f "$src" ]]; then
-      cp "$src" "$event_dir/"
+    local fname="${sorted_files[$i]}"
+    if [[ -f "$LIBRARY_DIR/$fname" ]]; then
+      ln -s "../library/$fname" "$event_dir/$fname"
       count=$((count + 1))
     fi
     i=$((i + 1))
@@ -147,5 +157,5 @@ assign_files_to_event "sessionEnd"          55 100  # longer, atmospheric (same 
 
 echo ""
 echo "=== Done! ==="
-echo "Normalized files distributed into sounds/ directories."
-echo "Original files in repo root are untouched."
+echo "Normalized files in sounds/library/."
+echo "Symlinks distributed into sounds/<event>/ directories."
