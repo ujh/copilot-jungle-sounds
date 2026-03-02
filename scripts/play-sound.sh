@@ -7,6 +7,7 @@ set -euo pipefail
 
 SOUNDS_DIR="/System/Library/Sounds"
 VOLUME="0.3"
+MAX_DURATION="30"
 LOG_FILE="/tmp/copilot-jungle-sounds.log"
 
 EVENT="${1:-}"
@@ -51,7 +52,7 @@ fi
 
 if [[ -f "$SOUND_FILE" ]] && command -v afplay &>/dev/null; then
   echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Playing: $SOUND_FILE" >> "$LOG_FILE"
-  afplay -v "$VOLUME" "$SOUND_FILE" &
+  afplay -v "$VOLUME" -t "$MAX_DURATION" "$SOUND_FILE" &
 else
   echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Cannot play: file=$SOUND_FILE afplay=$(command -v afplay 2>/dev/null || echo 'not found')" >> "$LOG_FILE"
 fi

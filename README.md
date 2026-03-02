@@ -94,6 +94,10 @@ All located at `/System/Library/Sounds/*.aiff`.
 
 Change the `VOLUME` variable at the top of `scripts/play-sound.sh` (0.0 = silent, 1.0 = full volume, default is 0.3).
 
+### Adjusting max duration
+
+Sounds are capped at **30 seconds** of playback. Change the `MAX_DURATION` variable at the top of `scripts/play-sound.sh` to adjust (value is in seconds).
+
 ### After making changes
 
 Re-install the plugin to pick up your edits:
