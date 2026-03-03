@@ -117,6 +117,14 @@ for f in "${AUDIO_FILES[@]}"; do
     continue
   fi
 
+  # Check if already normalized (within 2.0 LUFS tolerance)
+  is_normalized=$(echo | awk -v i="$input_i" -v t="$TARGET_LUFS" 'BEGIN { diff = i - t; if (diff < 0) diff = -diff; if (diff < 2.0) print 1; else print 0 }')
+  
+  if [[ "$is_normalized" -eq 1 ]]; then
+    echo "  - Already normalized (measured ${input_i} LUFS, target ${TARGET_LUFS} LUFS)"
+    continue
+  fi
+
   # Pass 2: Apply normalization with format-appropriate output options
   ext="${f##*.}"
   if [[ "$ext" == "wav" ]]; then
@@ -136,7 +144,9 @@ done
 
 # Move normalized files back into library (overwrite originals)
 for f in "${AUDIO_FILES[@]}"; do
-  mv "$TEMP_DIR/$f" "$LIBRARY_DIR/$f"
+  if [[ -f "$TEMP_DIR/$f" ]]; then
+    mv "$TEMP_DIR/$f" "$LIBRARY_DIR/$f"
+  fi
 done
 
 echo ""
