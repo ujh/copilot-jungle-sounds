@@ -14,6 +14,7 @@ USAGE_DIR="${HOME}/.copilot-jungle-sounds"
 USAGE_DB="${USAGE_DIR}/usage.db"
 PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TRACK_USAGE_SCRIPT="$PLUGIN_DIR/scripts/track-tool-usage.py"
+CALCULATE_VOLUME_SCRIPT="$PLUGIN_DIR/scripts/calculate-volume.py"
 
 EVENT="${1:-}"
 HOOK_PAYLOAD="$(cat 2>/dev/null || true)"
@@ -76,6 +77,18 @@ EFFECTIVE_VOLUME="$VOLUME"
 case "$EVENT" in
   agentStop)
     EFFECTIVE_VOLUME=$(awk "BEGIN {v = $VOLUME * 4; if (v > 1) v = 1; printf \"%.2f\", v}")
+    ;;
+  preToolUse|postToolUse)
+    if [[ -f "$CALCULATE_VOLUME_SCRIPT" ]] && command -v python3 &>/dev/null; then
+      FACTOR=$(printf '%s' "$HOOK_PAYLOAD" | USAGE_DB_PATH="$USAGE_DB" python3 "$CALCULATE_VOLUME_SCRIPT")
+      # Check if FACTOR is valid float
+      if [[ "$FACTOR" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        EFFECTIVE_VOLUME=$(awk "BEGIN {v = $VOLUME * $FACTOR; if (v > 1) v = 1; printf \"%.2f\", v}")
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Calculated volume factor: $FACTOR (Effective: $EFFECTIVE_VOLUME)" >> "$LOG_FILE"
+      else
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Invalid volume factor: '$FACTOR'" >> "$LOG_FILE"
+      fi
+    fi
     ;;
 esac
 
