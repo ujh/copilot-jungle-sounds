@@ -75,7 +75,7 @@ esac
 EFFECTIVE_VOLUME="$VOLUME"
 case "$EVENT" in
   agentStop)
-    EFFECTIVE_VOLUME=$(awk "BEGIN {v = $VOLUME * 2; if (v > 1) v = 1; printf \"%.2f\", v}")
+    EFFECTIVE_VOLUME=$(awk "BEGIN {v = $VOLUME * 4; if (v > 1) v = 1; printf \"%.2f\", v}")
     ;;
 esac
 
