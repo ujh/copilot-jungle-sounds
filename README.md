@@ -2,6 +2,12 @@
 
 Audio feedback plugin for **GitHub Copilot CLI** that plays jungle and nature sounds during hook events.
 
+Many _decades_ ago I read somewhere on the internet of someone creating a jungle audioscape
+from the live log files of their servers. They claimed that they could hear when something
+was off. I always found that so so cool and never forgot it. While I haven't gotten around
+to doing anything with the logs of _my_ servers, this was the next best thing. I do hope
+you'll enjoy it as much as I do. If not, there's a way to disable plugins, again.🤣
+
 ## Requirements
 
 - **macOS** (uses `afplay` and `/System/Library/Sounds/`)
