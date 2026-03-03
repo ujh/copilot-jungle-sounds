@@ -18,7 +18,7 @@ This is a **GitHub Copilot CLI plugin** that plays jungle/nature sounds during a
 | `sessionStart`        | Longer-duration subset    | A session started                                                 |
 | `sessionEnd`          | Longer-duration subset    | A session ended                                                   |
 | `userPromptSubmitted` | Short-to-medium subset    | User submitted a prompt                                           |
-| `agentStop`           | Medium subset             | Agent finished responding (includes ask-for-input moments)        |
+| `agentStop`           | Attention-grabbing subset | Agent finished responding (includes ask-for-input moments)        |
 | `subagentStop`        | Short-medium subset       | A subagent completed                                              |
 | `errorOccurred`       | Medium/distinctive subset | An error occurred                                                 |
 
